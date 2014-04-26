@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LS-Minimus</title>
+<!--<meta http-equiv="refresh" content="3" />-->
+<script src="js/jquery-1.10.2.min.js"></script>
+<script type="text/javascript" src="settings.js"></script>
+<script type="text/javascript">
+//----------------------------
+// LS Minimus - @chris_dickow
+//----------------------------
+// DO NOT EDIT BELOW THIS LINE
+$(document).ready(function() {
+	// fire off first run
+	clock();
+	showLoader();
+	getWeather(locale);
+});
+var clockInt = setInterval(clock, 1000);
+function clock() {
+  
+  var time = new Date();
+  var currentHours = time.getHours();
+  var currentMinutes = time.getMinutes();
+  var currentSeconds = time.getSeconds();
+  if(currentHours >= 12){ am_pm = "p";}else{ am_pm = "a"; }
+  if(twelve_hour_time){
+	if(currentHours >= 13){ currentHours = currentHours - 12;}
+if(currentHours == 0){currentHours = 12;}
+	if(currentMinutes < 10){ currentMinutes = "0" + currentMinutes;}
+    if(currentSeconds < 10) { currentSeconds = "0" + currentSeconds;}
+  }
+  
+  if(show_seconds){
+	var currentTime = currentHours + ":" + currentMinutes + ":" + currentSeconds;
+  }else{
+	var currentTime = currentHours + ":" + currentMinutes;
+  }
+  $('#clock').html(currentTime + " <span class='am-pm'>" + am_pm + "</span>");
+  $('#date').html((time.getMonth()+1) + "/" + time.getDate() + "/" + time.getFullYear());
+  time.textDay();
+  $('#day_of_week').html(time.day);
+}
+Date.prototype.textDay = function(){
+  if (this.getDay()==0){this.day="Sunday"};
+  if (this.getDay()==1){this.day="Monday"};
+  if (this.getDay()==2){this.day="Tuesday"};
+  if (this.getDay()==3){this.day="Wednesday"};
+  if (this.getDay()==4){this.day="Thursday"};
+  if (this.getDay()==5){this.day="Friday"};
+  if (this.getDay()==6){this.day="Saturday"};
+}
+// The call to get the weather data
+function getWeather(locale){
+	if(celcius){ 
+		tempType = 'c';
+	}else{
+		tempType = 'f';
+	}
+	if(useSmallData){
+		$.ajax({
+		type: 'GET',
+		//	url: 'forecastrss.xml', // local testing
+		url: 'http://project107.net/api/lockscreen/weather/small-data.php?locale='+locale+'&tempType='+tempType,
+		crossDomain: true,
+		dataType: 'text',
+		success: function(data){ parseWeather(data, 'small');},
+		error: function(data){ $('#status').html("An error occured getting weather data from project107"); useSmallData = false; getWeather(locale);}
+	      });
+	}
+	else{
+	    $.ajax({
+		type: 'GET',
+		//	url: 'forecastrss.xml', // local testing
+		url: 'http://weather.yahooapis.com/forecastrss?u='+tempType+'&p='+locale+'&callback=c',
+		crossDomain: true,
+		dataType: 'text',
+		success: function(data){ parseWeather(data, 'big');},
+		error: function(data){ $('#status').html("An error occured getting weather data from yahoo");}
+	      });
+	}
+}
+function parseWeather(data, datatype){
+	if(datatype == 'small'){
+		var raw = data,
+		xmlDoc = $.parseXML(raw),
+		$xml = $(xmlDoc),
+		$current = $xml.find("temp"),
+		$currentDesc = $xml.find("desc"),
+		$code = $xml.find("code"),
+		$highTemp = $xml.find("high"),
+		$lowTemp = $xml.find("low");
+	}
+	else{
+		var raw = data,
+		xmlDoc = $.parseXML(raw),
+		$xml = $(xmlDoc),
+		$current = $xml.find("yweather\\:condition, temp").attr("temp"),
+		$currentDesc = $xml.find("yweather\\:condition, text").attr("text"),
+		$code = $xml.find("yweather\\:condition, code").attr("code"),
+		$highTemp = $xml.find("yweather\\:forecast, high").attr("high"),
+		$lowTemp = $xml.find("yweather\\:forecast, low").attr("low");
+	}
+	// Set vals
+	$('#temp_max').html($highTemp);
+	$('#temp_min').html($lowTemp);
+	$('#temp_val').html($current);
+	$('#temp_conditions').html($currentDesc);
+	$('#weather-icon').html("<img src='Weather/icons/"+$code.text()+".png' class='icon' />");
+	// Hide loader after values have been set
+	hideLoader();
+}
+function showLoader(){
+	$('#weather_container').hide();
+	$('#loader').show();
+}
+function hideLoader(){
+	$('#loader').fadeOut();
+	$('#weather_container').fadeIn();
+}
+</script>
+<style>
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 300;
+  src: url(font/OpenSans-Light.ttf);
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url(font/OpenSans-Regular.ttf);
+}
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: url(font/OpenSans-Bold.ttf);
+}
+body{ font-family: 'Open Sans'; padding: 0; color: #fff; margin-left: -5px; width: 328px; height: 480px;}
+#wrapper{ /* width: 280px; */height: 480px; padding: 16px; background-image: url(/var/mobile/Library/SpringBoard/Converted-LockBackground.jpg); background-size: 100% 100%; background-repeat: no-repeat; }
+#clock{ font-size: 90px; letter-spacing: -4px; font-weight: 300; text-align: right; margin-top: 50%;}
+.am-pm{font-size: 30px; margin-left: -10px;}
+#date { margin-top: -3px; text-align: right; padding-right: 4px; }
+#day_of_week{ font-size: 30px; margin-top: -24px; text-align: right;}
+#weather_container{  margin: -40px auto 100px; margin-left: 90px; text-align: center; width: 120px;}
+#temp{ margin-top: -54px; font-size: 30px; text-align: center; margin-left: 14px; font-weight: 100; }
+.hi_low_container{ letter-spacing: -2px;}
+#weather-icon{ width: 64px; height: 64px; margin-left: -5px; }
+.icon{ width: 64px; height: 64px;}
+#temp_conditions{ font-size:12px; text-align: center;}
+#status{ font-size: 10px; color: #f00;	text-align:center;}
+#loader{position: absolute; top: 320px; left:144px; z-index: 999; text-align: center; height: 40px;}
+/* Spinner loader by @tobiasahlin */
+.spinner {
+  margin: -20px auto;
+  width: 40px;
+  height: 40px;
+  position: relative;
+  text-align: center;
+  -webkit-animation: rotate 2.0s infinite linear;
+  animation: rotate 2.0s infinite linear;
+}
+.dot1, .dot2 {
+  width: 60%;
+  height: 60%;
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  background-color: #fff;
+  border-radius: 100%;
+  -webkit-animation: bounce 2.0s infinite ease-in-out;
+  animation: bounce 2.0s infinite ease-in-out;
+}
+.dot2 {
+  top: auto;
+  bottom: 0px;
+  -webkit-animation-delay: -1.0s;
+  animation-delay: -1.0s;
+}
+@-webkit-keyframes rotate { 100% { -webkit-transform: rotate(360deg) }}
+@keyframes rotate { 100% { transform: rotate(360deg); -webkit-transform: rotate(360deg) }}
+@-webkit-keyframes bounce {
+  0%, 100% { -webkit-transform: scale(0.0) }
+  50% { -webkit-transform: scale(1.0) }
+}
+@keyframes bounce {
+  0%, 100% { 
+    transform: scale(0.0);
+    -webkit-transform: scale(0.0);
+  } 50% { 
+    transform: scale(1.0);
+    -webkit-transform: scale(1.0);
+  }
+}
+</style>
+</head>
+<body>
+<div id="wrapper">
+<div id="loader" style="display:none;"><div class='spinner'><div class='dot1'></div><div class='dot2'></div></div></div>
+<!-- BEGIN clock/date/weather widget --> 
+<div id="widget">
+<div id="dateTimeWidget">
+
+  <div id="clock"></div>
+  <div id="day_of_week"></div>
+  <div id="date"></div> 
+</div>
+<!-- BEGIN sts (errors) -->
+<div id="status"></div>
+<!-- END sts (errors) -->
+<div id="weather_container">	  
+      <div id="weather-icon"></div> 
+      <div id="temp"><span id="temp_val"></span>&deg;</div>
+      <div id="temp_conditions"></div>
+      <span id="hi_low_container">&#8593;<span id="temp_max">-</span>&deg; &#8595;<span id="temp_min">-</span>&deg;</span>
+    </div>
+<!-- END clock/date/weather widget -->
+</div>
+
+</div>
+</body>
+</html>
