@@ -1,6 +1,7 @@
 // DO NOT EDIT BELOW THIS LINE
 $(document).ready(function() {
 	// fire off first run
+	setWallpaper();
 	clock();
 	showLoader();
 	getWeather(locale);
@@ -107,4 +108,14 @@ function showLoader(){
 function hideLoader(){
 	$('#loader').fadeOut();
 	$('#weather_container').fadeIn();
+}
+function setWallpaper(){
+	$.get('/var/mobile/Library/SpringBoard/Converted-LockBackground.jpg')
+    .done(function() { 
+        // exists code
+        $('#wrapper').css('background-image', 'url(/var/mobile/Library/SpringBoard/Converted-LockBackground.jpg)');
+    }).fail(function() { 
+        // not exists code
+        $('#wrapper').css('background-image', 'url(img/wallpaper.jpg)');
+    });
 }

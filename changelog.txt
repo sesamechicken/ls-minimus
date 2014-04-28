@@ -1,0 +1,9 @@
+LS Minimus changelog
+
+v 1.1 - 4/14
+- Updated readme 
+- Default wallpaper for those without Wallpaper JPEGifier (was a blank screen)
+- Smaller code footprint
+
+v 1.0 - 4/14
+- Initial release
